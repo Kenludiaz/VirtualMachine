@@ -1,6 +1,11 @@
 #include <stdlib.h>
 #include "seq.h"
 
+
+
+  enum ops {CMV = 0, SLOAD, SSTORE, ADD, MULT, DIVIDE, NAND, HALT, MAP,
+                                        UMAP, OUT, IN, LOADP, LOADV};
+  enum regs { r0 = 0, r1, r2, r3, r4, r5, r6, r7 };
 // Registers r[0] and r[7] initialized and 0-ed
 Seq_T initRegisters();
 

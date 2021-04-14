@@ -6,9 +6,9 @@
 #include "table.h"
 #include <stdlib.h>
 
-typedef Table_T Segment;
 // Stores memory segments
 typedef Table_T segmentContainer;
+typedef Table_T Segment;
 typedef uint32_t word;
 
 // Reads instructions from fp and
