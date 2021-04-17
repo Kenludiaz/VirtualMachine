@@ -1,5 +1,6 @@
 #include "um.h"
 
-int init(FILE *fp) {
-
+int init(int *fp) {
+    (void)fp;
+    return 1;
 }
