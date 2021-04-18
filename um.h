@@ -1,10 +1,17 @@
-// /*
-//   Module that contains the Universal Machine and ties the 
-//   other modules together
+/*
+  Module that contains the Universal Machine and ties the 
+  other modules together
   
-// */
-// #include <stdlib.h>
-// #include "memoryOperations.h"
+*/
+#include "memoryOperations.h"
+#include "table.h"
+#include "um-dis.h"
+// Runs a program until completion
+int run(FILE * program);
+
+
+
+
 
 
 // // Registers r[0] and r[7] initialized and 0-ed

@@ -1,7 +1,56 @@
 #include "memoryOperations.h"
+#include "bitpack.h"
 
 // Defined macro "max" in stdint was overflowing
-#define twoto32 4294967296
+#define twopower32 4294967296
+
+// Reads instructions from fp and
+// writes it to a segment
+Segment readInstructions(FILE * fp) {
+    int input = getchar(fp);
+    unsigned inputWidth = 8;
+    unsigned lsb = 24;
+    uint32_t word = 0;
+    uint32_t counter = 0;
+    Segment seg = Table_new(2, NULL, NULL);
+
+    while (input != EOF) {
+        word = Bitpack_newu(word, inputWidth, lsb, input);
+        lsb -= inputWidth;
+        int input = getchar(fp);
+
+        // printf("Width: %u, lsb: %u\n", inputWidth, lsb);
+        printf("Count: %u\n", counter++);
+        if (input == '\n') {
+            Table_put(seg, &counter, &word);
+            return seg;
+            lsb = 24;
+            word = 0;
+        }
+    }
+    return seg;
+}
+
+// Writes segment[segmentIndex] into fp
+void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
+
+// Returns the word at segments[index][offset]
+// word getWord(segmentContainer segments, uint32_t index, uint32_t offset) {
+//     void * value = Table_get(segments, (void *)index);
+//     if (value == NULL) {
+//         fprintf(stderr, "Segment not mapped.\n");
+//         Halt();
+//     }
+//     Table_T segment = (Table_T)value;
+//     word value = (word)Table_get(segment, offset);
+//     return value;
+// }
+
+// Reads the first four bytes of the instruction
+// and returns the appropriate Opcode
+int readOpCode(word instruction) {
+    return (int)(instruction >> 28);
+}
 
 int conditionalMove(threeRegisters) {
     if (r[C] != 0) {
@@ -18,12 +67,12 @@ int conditionalMove(threeRegisters) {
 
 // Adds r[B] and r[C] into r[A]
 void add(threeRegisters) {
-    r[A] = ((r[B] + r[C]) % twoto32);
+    r[A] = ((r[B] + r[C]) % twopower32);
 }
 
 // Multiplies r[B] and r[C] into r[A]
 void multiply(threeRegisters) {
-    r[A] = ((r[B] * r[C]) % twoto32);
+    r[A] = ((r[B] * r[C]) % twopower32);
 }
 
 // Divides r[B] by r[C] and saved into r[A] (integer divition)
@@ -59,7 +108,14 @@ void output(registerContainer r, int C) {
 // value must be from 0 to 255.
 // Will have a full 32-bit word with every bit is 1
 void input(registerContainer r, int C) {
-    
+    __u_char input;
+    input = getchar();
+
+    // if (input == EOF) {
+    //     r[C] = UINT32_MAX;
+    //     return;
+    // }
+    r[C] = input % 256;
 }
 
 // // Duplicates segment m[ r[B] ] and usurps  m [ 0 ]
@@ -70,4 +126,4 @@ void input(registerContainer r, int C) {
 // //  Loads value into register A
 // int loadValue(registerContainer r, int A, word value);
 
-#undef twoto32
+#undef twopower32

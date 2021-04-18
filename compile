@@ -16,7 +16,7 @@ CC=gcc
 CFLAGS="-I. -I/usr/local/cii/include -I/usr/local/include -I/csc/411/include "
 LIBS="-lum-dis -lcii -lnetpbm -lm"
 
-LFLAGS="-L/usr/local/cii/lib -L/usr/local/lib -L/csc/411/lib -L/csc/411/lib/"
+LFLAGS="-L/usr/local/cii/lib -L/usr/local/lib  -L/csc/411/lib/"
 # these flags max out warnings and debug info
 FLAGS="-no-pie -g -O0 -Wall -Wextra -Werror -Wfatal-errors -std=c99 -pedantic"
 
@@ -37,10 +37,10 @@ done
 # using one case statement per executable binary
 
 case $link in
-  all|main.c) gcc $FLAGS $LFLAGS -o main main.o \
-                          registerOperations -o \
-                          segmentOperations  -o \
-                          um - o                \
+  all|main) gcc $FLAGS $LFLAGS -o main main.o \
+                          um.o \
+                          memoryOperations.o \
+                          bitpack.o \
                           $LIBS
                           linked=yes ;;
 esac
