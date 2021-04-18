@@ -36,8 +36,10 @@ void NANDGate(threeRegisters) {
     r[A] = ~(r[B] & r[C]);
 }
 
-// // Stops computation
-// void Halt();
+// Stops computation
+void Halt() {
+    exit(0);
+}
 
 // // Creates a segment with r[C] number of words
 // // A currently unused bit identifier will be placed in r[B]
@@ -48,13 +50,17 @@ void NANDGate(threeRegisters) {
 // // into the available segments
 // int unMapSegment(segmentContainer m, registerContainer r, int C);
 
-// // Writes the contents of r[C], only values from 0 to 255
-// void output(registerContainer r, int C);
+// Writes the contents of r[C], only values from 0 to 255
+void output(registerContainer r, int C) {
+    printf("%u\n", (r[C] % 256) );
+}
 
-// // Gets input and stores it into r[C],
-// // value must be from 0 to 255.
-// // Will have a full 32-bit word with every bit is 1
-// void input(registerContainer r, int C);
+// Gets input and stores it into r[C],
+// value must be from 0 to 255.
+// Will have a full 32-bit word with every bit is 1
+void input(registerContainer r, int C) {
+    
+}
 
 // // Duplicates segment m[ r[B] ] and usurps  m [ 0 ]
 // // The program counter will be set to r[C]

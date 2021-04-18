@@ -6,6 +6,7 @@
 #include "table.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 // Some operations will require accessing segments,
 // Declared void * in order to decouple this module from
 // segmentOperations
