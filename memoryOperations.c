@@ -27,10 +27,14 @@ void multiply(threeRegisters) {
 }
 
 // Divides r[B] by r[C] and saved into r[A] (integer divition)
-void divide(threeRegisters);
+void divide(threeRegisters) {
+    r[A] = (r[B] / r[C]);
+}
 
-// // Bitwise NAND gate on r[B] and r[C] into r[A]
-// void NAND(threeRegisters);
+// Bitwise NAND gate on r[B] and r[C] into r[A]
+void NANDGate(threeRegisters) {
+    r[A] = ~(r[B] & r[C]);
+}
 
 // // Stops computation
 // void Halt();
