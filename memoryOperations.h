@@ -1,7 +1,8 @@
-/* Preforms operations on registers
+/* Preforms operations on registers and memory segments
    Registers will hold a 32-bit word 
+   Memory segments will be stored as tables in order to
+   allow ease of lookup, addition, and removal at any segment
 */
-
 #include "table.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -39,6 +40,9 @@ int conditionalMove(threeRegisters);
 
 // Saves the value of r[B] into r[A]
 void segmentedLoad(segmentContainer m, threeRegisters);
+
+// Stores the value of r[C] int m[r [A] ][r [B]]
+void segmentStore(segmentContainer m, threeRegisters);
 
 // Adds r[B] and r[C] into r[A]
 void add(threeRegisters);

@@ -1,5 +1,8 @@
 #include "memoryOperations.h"
 
+// Defined macro "max" in stdint was overflowing
+#define twoto32 4294967296
+
 int conditionalMove(threeRegisters) {
     if (r[C] != 0) {
         r[A] = r[B];
@@ -13,14 +16,18 @@ int conditionalMove(threeRegisters) {
 //     if ()
 // }
 
-// // Adds r[B] and r[C] into r[A]
-// void add(threeRegisters);
+// Adds r[B] and r[C] into r[A]
+void add(threeRegisters) {
+    r[A] = ((r[B] + r[C]) % twoto32);
+}
 
-// // Multiplies r[B] and r[C] into r[A]
-// void multiply(threeRegisters);
+// Multiplies r[B] and r[C] into r[A]
+void multiply(threeRegisters) {
+    r[A] = ((r[B] * r[C]) % twoto32);
+}
 
-// // Divides r[B] by r[C] and saved into r[A] (integer divition)
-// void divide(threeRegisters);
+// Divides r[B] by r[C] and saved into r[A] (integer divition)
+void divide(threeRegisters);
 
 // // Bitwise NAND gate on r[B] and r[C] into r[A]
 // void NAND(threeRegisters);
@@ -52,3 +59,5 @@ int conditionalMove(threeRegisters) {
 
 // //  Loads value into register A
 // int loadValue(registerContainer r, int A, word value);
+
+#undef twoto32
