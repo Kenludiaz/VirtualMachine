@@ -7,23 +7,24 @@
 // Reads instructions from fp and
 // writes it to a segment
 Segment readInstructions(FILE * fp) {
-    int input = getchar(fp);
     unsigned inputWidth = 8;
-    unsigned lsb = 24;
+    int lsb = 24;
     uint32_t word = 0;
     uint32_t counter = 0;
     Segment seg = Table_new(2, NULL, NULL);
 
+    int input = getc(fp);
     while (input != EOF) {
+        printf("Input: %d\n", input);
+
         word = Bitpack_newu(word, inputWidth, lsb, input);
         lsb -= inputWidth;
-        int input = getchar(fp);
+        input = getc(fp);
 
-        // printf("Width: %u, lsb: %u\n", inputWidth, lsb);
-        printf("Count: %u\n", counter++);
-        if (input == '\n') {
-            Table_put(seg, &counter, &word);
-            return seg;
+        if (lsb < 0) {
+            const char * key   = Atom_int(counter);
+            counter++;
+            Table_put(seg, key, &word);
             lsb = 24;
             word = 0;
         }
@@ -34,17 +35,37 @@ Segment readInstructions(FILE * fp) {
 // Writes segment[segmentIndex] into fp
 void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
 
+    // const char * firstKey  =  Atom_int(index);
+    // const char * secondKey = Atom_int(offset);
+    // void ** Arr = Table_toArray(segments, NULL);
+    // for (int i = 0; i < 2; i++) {
+    //     printf("Char: %d\n", *((int*)Arr[i]));
+    //     printf("function: %lu\n", &index);
+    // }
+    // uint32_t * indexPtr = &index;
 // Returns the word at segments[index][offset]
-// word getWord(segmentContainer segments, uint32_t index, uint32_t offset) {
-//     void * value = Table_get(segments, (void *)index);
-//     if (value == NULL) {
-//         fprintf(stderr, "Segment not mapped.\n");
-//         Halt();
-//     }
-//     Table_T segment = (Table_T)value;
-//     word value = (word)Table_get(segment, offset);
-//     return value;
-// }
+word getWord(segmentContainer segments, uint32_t index, uint32_t offset) {
+    const char * firstKey = Atom_int(index);
+    void * segmentPtr = Table_get(segments, firstKey);
+    
+
+    Table_T segment = (Table_T)segmentPtr;
+    printf("Container.length: %d\n", Table_length(segment));
+    if (segmentPtr == NULL) {
+        fprintf(stderr, "Segment not mapped.\n");
+        Halt();
+    }
+
+
+    void * wordPtr = Table_get(segment, &offset);
+
+    if (wordPtr == NULL) {
+        fprintf(stderr, "Word not mapped.\n");
+        Halt();
+    }
+    word Word = (*(word *)wordPtr);
+    return Word;
+}
 
 // Reads the first four bytes of the instruction
 // and returns the appropriate Opcode
@@ -90,31 +111,37 @@ void Halt() {
     exit(0);
 }
 
-// // Creates a segment with r[C] number of words
-// // A currently unused bit identifier will be placed in r[B]
-// // Will map to m[ r[B] ]
-// int mapSegment(segmentContainer m, registerContainer r,  int B, int C);
+// Creates a segment with r[C] number of words
+// A currently unused bit identifier will be placed in r[B]
+// Will map to m[ r[B] ]
+// int mapSegment(segmentContainer m, registerContainer r,  unsigned B, unsigned C) {
+//     // Check if there are unmapped id's
+//     // if yes then r[B] = unmapped register
+//     // else check registerContainer[ length] 
+//     // if it does not already exist
+//     // if already exists length++
+// }
 
 // // Unmapps segment m [ r[C] ], and adds the r[C] identifier
 // // into the available segments
 // int unMapSegment(segmentContainer m, registerContainer r, int C);
 
 // Writes the contents of r[C], only values from 0 to 255
-void output(registerContainer r, int C) {
+void output(registerContainer r, unsigned C) {
     printf("%u\n", (r[C] % 256) );
 }
 
 // Gets input and stores it into r[C],
 // value must be from 0 to 255.
 // Will have a full 32-bit word with every bit is 1
-void input(registerContainer r, int C) {
-    __u_char input;
+void input(registerContainer r, unsigned C) {
+    int input;
     input = getchar();
 
-    // if (input == EOF) {
-    //     r[C] = UINT32_MAX;
-    //     return;
-    // }
+    if (input == EOF) {
+        r[C] = UINT32_MAX;
+        return;
+    }
     r[C] = input % 256;
 }
 
