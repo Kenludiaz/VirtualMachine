@@ -33,12 +33,14 @@ int run(FILE * program) {
     Table_put(m, home, zero);
 
     // Cast might become problematic
-//     printf("Length : %d\n", Table_length(m));
-    for (unsigned programCounter = 0; programCounter < (unsigned)Table_length(zero); programCounter++) {
+    // Remember to recalculate this when a program is loaded
+        unsigned length = (unsigned)Table_length(zero);
+    for (unsigned programCounter = 0; programCounter < length; programCounter++) {
         const char * instructionNumber = Atom_int(programCounter);
         word instruction = getWord(m, home, instructionNumber);
-        int opCode = readOpCode(instruction);
-        pr
+        int opCode = readOpCode(instruction);\
+        // printf("Instruction: %x\n", instruction);
+        // printf("Opcode: %d\n", opCode);
         switch (opCode) {
 
         case CMV:
@@ -126,5 +128,6 @@ int run(FILE * program) {
             break;
         }
     }
+    Table_free(&m);
     return 0;
 }

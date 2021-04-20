@@ -95,6 +95,3 @@ int loadProgram(segmentContainer m, registerContainer r, unsigned B, unsigned C)
 
 //  Loads value into register A
 int loadValue(registerContainer r, unsigned A, word value);
-
-#undef segmentContainer
-#undef word

@@ -9,23 +9,31 @@
 Segment readInstructions(FILE * fp) {
     unsigned inputWidth = 8;
     int lsb = 24;
-    uint32_t word = 0;
+
+
+    word *wordPtr = (word *)malloc(sizeof(word));
+    word Word = (*(wordPtr));
     uint32_t counter = 0;
     Segment seg = Table_new(2, NULL, NULL);
 
     int input = getc(fp);
     while (input != EOF) {
+        // printf("Input: %d\n", input);
 
-        word = Bitpack_newu(word, inputWidth, lsb, input);
+        Word = Bitpack_newu(Word, inputWidth, lsb, input);
         lsb -= inputWidth;
         input = getc(fp);
 
         if (lsb < 0) {
             const char * key   = Atom_int(counter);
+
+            Table_put(seg, key, wordPtr);
+            printf("Word From Table: %x\n", (*(word *)Table_get(seg, key)));
+            printf("Word: %x\n", Word);
             counter++;
-            Table_put(seg, key, &word);
             lsb = 24;
-            word = 0;
+            wordPtr = (word *)malloc(sizeof(word));
+            Word = (*wordPtr);
         }
     }
     return seg;
