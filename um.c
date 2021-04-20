@@ -6,28 +6,25 @@ int main(int argc, char** argv) {
     // Add more file handeling
     FILE * fp = fopen(argv[1], "r");
     run(fp);
-
+    fclose(fp);
 }
 
 // Runs a program until completion
 int run(FILE * program) {
     uint32_t  r[8] = { 0 };
     segmentContainer m = Table_new(2, NULL, NULL);
+    printf("Hello World\n");
     Segment zero = readInstructions(program);
     int programHome = (int)0;
     const char * home = Atom_int(programHome);
     Table_put(m, home, zero);
-
-        // printf("Word in Main: %x\n", (*(word *)Seq_get(zero, 3)));
-        // printf("Seq Length: %d\n", Seq_length(zero));
-
     // Remember to recalculate this when a program is loaded
-        int length = Seq_length(zero);
+    int length = Seq_length(zero);
     for (int programCounter = 0; programCounter < length; programCounter++) {
-        word instruction = getWord(m, home, programCounter);
+        word instruction = (uint32_t)(uintptr_t)Seq_remlo(zero);
+        printf("Instruction: %x\n", instruction);
         int opCode = readOpCode(instruction);
-        // printf("Instruction: %x\n", instruction);
-        // printf("Opcode: %d\n", opCode);
+        printf("Opcode: %d\n", opCode);
         switch (opCode) {
 
         case CMV:
