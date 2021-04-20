@@ -9,10 +9,11 @@
 #include <stdlib.h>
 #include "atom.h"
 #include "bitpack.h"
+#include "seq.h"
 
 typedef uint32_t * registerContainer;
 typedef Table_T     segmentContainer;
-typedef Table_T              Segment;
+typedef Seq_T                Segment;
 typedef uint32_t                word;
 
 #define threeRegisters registerContainer r, unsigned A, unsigned B, unsigned C
@@ -29,7 +30,7 @@ Segment readInstructions(FILE * fp);
 void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
 
 // Returns the word at segments[index][offset]
-word getWord(segmentContainer segments, const char * index, const char * offset);
+word getWord(segmentContainer segments, const char * index, uint32_t offset);
 
 // Reads the first four bytes of the instruction
 // and returns the appropriate Opcode

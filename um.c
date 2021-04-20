@@ -9,19 +9,6 @@ int main(int argc, char** argv) {
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Runs a program until completion
 int run(FILE * program) {
     uint32_t  r[8] = { 0 };
@@ -29,16 +16,16 @@ int run(FILE * program) {
     Segment zero = readInstructions(program);
     int programHome = (int)0;
     const char * home = Atom_int(programHome);
-//     printf("Run: %s\n", home);
     Table_put(m, home, zero);
 
-    // Cast might become problematic
+        // printf("Word in Main: %x\n", (*(word *)Seq_get(zero, 3)));
+        // printf("Seq Length: %d\n", Seq_length(zero));
+
     // Remember to recalculate this when a program is loaded
-        unsigned length = (unsigned)Table_length(zero);
-    for (unsigned programCounter = 0; programCounter < length; programCounter++) {
-        const char * instructionNumber = Atom_int(programCounter);
-        word instruction = getWord(m, home, instructionNumber);
-        int opCode = readOpCode(instruction);\
+        int length = Seq_length(zero);
+    for (int programCounter = 0; programCounter < length; programCounter++) {
+        word instruction = getWord(m, home, programCounter);
+        int opCode = readOpCode(instruction);
         // printf("Instruction: %x\n", instruction);
         // printf("Opcode: %d\n", opCode);
         switch (opCode) {

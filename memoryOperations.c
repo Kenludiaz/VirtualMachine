@@ -8,34 +8,25 @@
 // writes it to a segment
 Segment readInstructions(FILE * fp) {
     unsigned inputWidth = 8;
-    int lsb = 24;
 
+    Segment seg = Seq_new(2);
 
-    word *wordPtr = (word *)malloc(sizeof(word));
-    word Word = (*(wordPtr));
-    uint32_t counter = 0;
-    Segment seg = Table_new(2, NULL, NULL);
+    int input = 0;
+    for (int wordCounter = 0; input != -EOF; wordCounter++) {
+        word currentWord = 0;
 
-    int input = getc(fp);
-    while (input != EOF) {
-        // printf("Input: %d\n", input);
-
-        Word = Bitpack_newu(Word, inputWidth, lsb, input);
-        lsb -= inputWidth;
-        input = getc(fp);
-
-        if (lsb < 0) {
-            const char * key   = Atom_int(counter);
-
-            Table_put(seg, key, wordPtr);
-            printf("Word From Table: %x\n", (*(word *)Table_get(seg, key)));
-            printf("Word: %x\n", Word);
-            counter++;
-            lsb = 24;
-            wordPtr = (word *)malloc(sizeof(word));
-            Word = (*wordPtr);
+        unsigned lsb = 24;
+        for (int byteCounter = 0; byteCounter < 4; byteCounter++) {
+            int input = getc(fp);
+            printf("lsb: %u\n", lsb - (byteCounter * inputWidth));
+            printf("inputWidth: %u\n", inputWidth);
+            currentWord = Bitpack_newu(currentWord, inputWidth, lsb - (byteCounter * inputWidth), input);
         }
+        printf("Current Word: %x\n", currentWord);
+
+        Seq_addhi(seg, &currentWord);
     }
+    printf("Made it\n");
     return seg;
 }
 
@@ -51,7 +42,7 @@ void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
     // }
     // uint32_t * indexPtr = &index;
 // Returns the word at segments[index][offset]
-word getWord(segmentContainer segments, const char * index, const char * offset) {
+word getWord(segmentContainer segments, const char * index, uint32_t offset) {
     // printf("Get Word: %s\n", index);
     
     void * segmentPtr = Table_get(segments, index);
@@ -61,17 +52,14 @@ word getWord(segmentContainer segments, const char * index, const char * offset)
         fprintf(stderr, "Segment not mapped.\n");
         Halt();
     }
-    Table_T segment = (Table_T)segmentPtr;
-    // printf("Container.length: %d\n", Table_length(segment));
+    Segment segment = (Segment)segmentPtr;
+    // printf("Container.get: %d\n", (*(uint32_t *)Table_get(segment, (Atom_int(1)))));
 
 
-    void * wordPtr = Table_get(segment, offset);
+    void * wordPtr = Seq_get(segment, offset);
 
-    if (wordPtr == NULL) {
-        fprintf(stderr, "Word not mapped.\n");
-        Halt();
-    }
     word Word = (*(word *)wordPtr);
+    // printf("Word: %u\n", Word);
     return Word;
 }
 
