@@ -28,13 +28,17 @@ int run(FILE * program) {
     segmentContainer m = Table_new(2, NULL, NULL);
     Segment zero = readInstructions(program);
     int programHome = (int)0;
-    Table_put(m, &programHome, &zero);
+    const char * home = Atom_int(programHome);
+//     printf("Run: %s\n", home);
+    Table_put(m, home, zero);
 
     // Cast might become problematic
-    // printf("Length : %d\n", Table_length(zero));
+//     printf("Length : %d\n", Table_length(m));
     for (unsigned programCounter = 0; programCounter < (unsigned)Table_length(zero); programCounter++) {
-        word instruction = getWord(m, programHome, programCounter);
+        const char * instructionNumber = Atom_int(programCounter);
+        word instruction = getWord(m, home, instructionNumber);
         int opCode = readOpCode(instruction);
+        pr
         switch (opCode) {
 
         case CMV:

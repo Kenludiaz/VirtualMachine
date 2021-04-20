@@ -29,7 +29,7 @@ Segment readInstructions(FILE * fp);
 void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
 
 // Returns the word at segments[index][offset]
-word getWord(segmentContainer segments, uint32_t index, uint32_t offset);
+word getWord(segmentContainer segments, const char * index, const char * offset);
 
 // Reads the first four bytes of the instruction
 // and returns the appropriate Opcode

@@ -15,7 +15,6 @@ Segment readInstructions(FILE * fp) {
 
     int input = getc(fp);
     while (input != EOF) {
-        printf("Input: %d\n", input);
 
         word = Bitpack_newu(word, inputWidth, lsb, input);
         lsb -= inputWidth;
@@ -44,20 +43,21 @@ void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
     // }
     // uint32_t * indexPtr = &index;
 // Returns the word at segments[index][offset]
-word getWord(segmentContainer segments, uint32_t index, uint32_t offset) {
-    const char * firstKey = Atom_int(index);
-    void * segmentPtr = Table_get(segments, firstKey);
+word getWord(segmentContainer segments, const char * index, const char * offset) {
+    // printf("Get Word: %s\n", index);
+    
+    void * segmentPtr = Table_get(segments, index);
     
 
-    Table_T segment = (Table_T)segmentPtr;
-    printf("Container.length: %d\n", Table_length(segment));
     if (segmentPtr == NULL) {
         fprintf(stderr, "Segment not mapped.\n");
         Halt();
     }
+    Table_T segment = (Table_T)segmentPtr;
+    // printf("Container.length: %d\n", Table_length(segment));
 
 
-    void * wordPtr = Table_get(segment, &offset);
+    void * wordPtr = Table_get(segment, offset);
 
     if (wordPtr == NULL) {
         fprintf(stderr, "Word not mapped.\n");
