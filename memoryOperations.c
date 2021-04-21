@@ -97,7 +97,7 @@ void Halt() {
 
 // Writes the contents of r[C], only values from 0 to 255
 void output(registerContainer r, unsigned C) {
-    printf("%c\n", (char)r[C]);
+    printf("%c", (char)r[C]);
 }
 
 // Gets input and stores it into r[C],
@@ -115,7 +115,6 @@ void input(registerContainer r, unsigned C) {
 
 // Duplicates segment m[ r[B] ] and usurps  m [ 0 ]
 // The program counter will be set to r[C]
-// Returns 1 if successful and -1 if unsuccessful
 void loadProgram(segmentContainer m, registerContainer r, unsigned B) {
     Segment program = getSegment(m, r[B]);
     Table_put(m, Atom_int(0), program);

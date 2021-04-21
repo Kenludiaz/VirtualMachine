@@ -30,8 +30,8 @@ Segment readInstructions(FILE * fp);
 // Writes segment[segmentIndex] into fp
 void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
 
-// Returns the word at segments[index][offset]
-word getWord(segmentContainer segments, const char * index, uint32_t offset);
+// Returns the segment at segments[index]
+Segment getSegment(segmentContainer segments, unsigned index);
 
 // Reads the first four bytes of the instruction
 // and returns the appropriate Opcode
@@ -92,7 +92,6 @@ void input(registerContainer r, unsigned C);
 
 // Duplicates segment m[ r[B] ] and usurps  m [ 0 ]
 // The program counter will be set to r[C]
-// Returns 1 if successful and -1 if unsuccessful
 void loadProgram(segmentContainer m, registerContainer r, unsigned B);
 
 //  Loads value into register A

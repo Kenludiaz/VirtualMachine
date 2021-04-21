@@ -15,14 +15,8 @@ int run(FILE * program) {
     Segment zero = readInstructions(program);
     const char * home = Atom_int((int)0);
     Table_put(m, home, zero);
-    uint32_t a = 0;
-    uint32_t b = 9;
-    uint32_t c = UINT32_MAX;
-        printf("Unsigned Conversion: %d\n", (int)a);
-        printf("Unsigned Conversion: %d\n", (int)b);
-        printf("Unsigned Conversion: %d\n", (int)c);
-    // Remember to recalculate this when a program is loaded
-    for (unsigned programCounter = 0; programCounter < twopower32; programCounter++) {
+
+    for (unsigned programCounter = 0; programCounter < UINT32_MAX; programCounter++) {
         word instruction = (uint32_t)(uintptr_t)Seq_get(zero, programCounter);
         // printf("Instruction: %x\n", instruction);
         int opCode = readOpCode(instruction);
@@ -75,11 +69,11 @@ int run(FILE * program) {
         NANDGate(r, A, B, C);
   }          
             break;
-        // case HALT:
-//  {
-
-//  }           
-        //     break;
+        case HALT:
+ {
+        Halt();
+ }           
+            break;
         // case MAP:
 //  {
 
@@ -92,24 +86,27 @@ int run(FILE * program) {
         //     break;
         case OUT:
 {
-            uint32_t C =  CALC_C(instruction);
-            output(r, C);
+        uint32_t C =  CALC_C(instruction);
+        output(r, C);
 }           
             break;
         case IN:
 {
-            uint32_t C =  CALC_C(instruction);
-            input(r, C);
+        uint32_t C =  CALC_C(instruction);
+        input(r, C);
 }           
             break;
         case LOADP:
 {
         unsigned B = CALC_B(instruction);
         unsigned C = CALC_C(instruction);
+        // printf("B : %u, C : %u\n", B, C);
+        // printf("R[B] : %u, R[C] : %u\n", r[B], r[C]);
         loadProgram(m, r, B);
-        programCounter = r[C];
+        // -1 counteracts the increment at the end of the loop 
+        programCounter = r[C] - 1;
         // This might point to the same zero as in before the loop
-        // length = Seg_length(zero);
+        zero = getSegment(m, r[B]);
 }            
             break;
         case LOADV:
