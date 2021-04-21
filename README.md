@@ -1,9 +1,8 @@
 # Kenneth Lu Diaz
 
 ## Architecture
-main.c
- - Processes file pointer and runs the program
  - um.c
+   - Processes file pointer and runs the program
    - Ties all of the memory operations together
    - Main(Event) loop of the program
    - Contains the switch statement that decides which operation to run
