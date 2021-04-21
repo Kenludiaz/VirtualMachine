@@ -37,8 +37,7 @@ done
 # using one case statement per executable binary
 
 case $link in
-  all|main) gcc $FLAGS $LFLAGS -o main main.o \
-                          um.o \
+  all|um) gcc $FLAGS $LFLAGS -o um um.o \
                           memoryOperations.o \
                           bitpack.o \
                           $LIBS
