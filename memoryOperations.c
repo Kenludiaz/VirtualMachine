@@ -1,86 +1,47 @@
 #include "memoryOperations.h"
 #include "bitpack.h"
 
-// Defined macro "max" in stdint was overflowing
-#define twopower32 4294967296
 
-// Reads instructions from fp and
-// writes it to a segment
+// Reads instructions from fp 
+// Fp will never be null
 Segment readInstructions(FILE * fp) {
-    unsigned inputWidth = 8;
-    int lsb = 24;
+    // Hint was arbitrarily chosen
+    Segment seg = Seq_new(2);
 
+    int input = 0;
+    while ((input = getc(fp)) != EOF) {
+        word currentWord = 0;
 
-    word *wordPtr = (word *)malloc(sizeof(word));
-    word Word = (*(wordPtr));
-    uint32_t counter = 0;
-    Segment seg = Table_new(2, NULL, NULL);
-
-    int input = getc(fp);
-    while (input != EOF) {
-        // printf("Input: %d\n", input);
-
-        Word = Bitpack_newu(Word, inputWidth, lsb, input);
-        lsb -= inputWidth;
-        input = getc(fp);
-
-        if (lsb < 0) {
-            const char * key   = Atom_int(counter);
-
-            Table_put(seg, key, wordPtr);
-            printf("Word From Table: %x\n", (*(word *)Table_get(seg, key)));
-            printf("Word: %x\n", Word);
-            counter++;
-            lsb = 24;
-            wordPtr = (word *)malloc(sizeof(word));
-            Word = (*wordPtr);
-        }
+        currentWord = Bitpack_newu(currentWord, 8, 24, input);
+		input = getc(fp);
+		currentWord = Bitpack_newu(currentWord, 8, 16, input);
+		input = getc(fp);
+		currentWord = Bitpack_newu(currentWord, 8, 8, input);
+		input = getc(fp);
+		currentWord = Bitpack_newu(currentWord, 8, 0, input);
+        
+        Seq_addhi(seg, (void *)(uintptr_t)currentWord);
     }
     return seg;
 }
-
-// Writes segment[segmentIndex] into fp
-void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
-
-    // const char * firstKey  =  Atom_int(index);
-    // const char * secondKey = Atom_int(offset);
-    // void ** Arr = Table_toArray(segments, NULL);
-    // for (int i = 0; i < 2; i++) {
-    //     printf("Char: %d\n", *((int*)Arr[i]));
-    //     printf("function: %lu\n", &index);
-    // }
-    // uint32_t * indexPtr = &index;
-// Returns the word at segments[index][offset]
-word getWord(segmentContainer segments, const char * index, const char * offset) {
-    // printf("Get Word: %s\n", index);
-    
-    void * segmentPtr = Table_get(segments, index);
-    
-
-    if (segmentPtr == NULL) {
-        fprintf(stderr, "Segment not mapped.\n");
-        Halt();
+// Accessing unmapped segments is a checked run-time error
+Segment getSegment(segmentContainer segments, unsigned index) {
+    void * segmentPointer = Table_get(segments, Atom_int(index));
+    if (segmentPointer == NULL) {
+        exit(1);
     }
-    Table_T segment = (Table_T)segmentPtr;
-    // printf("Container.length: %d\n", Table_length(segment));
-
-
-    void * wordPtr = Table_get(segment, offset);
-
-    if (wordPtr == NULL) {
-        fprintf(stderr, "Word not mapped.\n");
-        Halt();
-    }
-    word Word = (*(word *)wordPtr);
-    return Word;
+    return (Segment)segmentPointer;
+}
+// Accessing words out of bounds in a checked run-time error
+word getWord(Segment seg, unsigned offset) {
+    return ((uint32_t)(uintptr_t)Seq_get(seg, offset));
 }
 
-// Reads the first four bytes of the instruction
-// and returns the appropriate Opcode
+// Will return the first four bits of a word
 int readOpCode(word instruction) {
     return (int)(instruction >> 28);
 }
-
+// Every register will never exceed the value of the typedef of word
 int conditionalMove(threeRegisters) {
     if (r[C] != 0) {
         r[A] = r[B];
@@ -88,23 +49,29 @@ int conditionalMove(threeRegisters) {
     }
     return -1;
 }
+// Checked run-time error to load unmapped memory
+void segmentedLoad(segmentContainer m, threeRegisters) {
+    Segment seg = getSegment( m, r[B] );
+    word Word = getWord( seg, r[C]);
+    r[A] = Word;
+}
+// Checked run-time error to store in unmapped memory
+void segmentStore(segmentContainer m, threeRegisters) {
+    Segment seg = getSegment(m, r[A]);
+    Seq_put(seg, r[B], (void *)(uintptr_t)r[C]);
+}
 
-
-// void segmentedLoad(segmentContainer m, threeRegisters) {
-//     if ()
-// }
-
-// Adds r[B] and r[C] into r[A]
+// r[A] will always be < 2^32
 void add(threeRegisters) {
     r[A] = ((r[B] + r[C]) % twopower32);
 }
 
-// Multiplies r[B] and r[C] into r[A]
+// r[A] will always be < 2^32
 void multiply(threeRegisters) {
     r[A] = ((r[B] * r[C]) % twopower32);
 }
 
-// Divides r[B] by r[C] and saved into r[A] (integer divition)
+// r[A] will always be an int
 void divide(threeRegisters) {
     r[A] = (r[B] / r[C]);
 }
@@ -119,46 +86,77 @@ void Halt() {
     exit(0);
 }
 
-// Creates a segment with r[C] number of words
-// A currently unused bit identifier will be placed in r[B]
-// Will map to m[ r[B] ]
-// int mapSegment(segmentContainer m, registerContainer r,  unsigned B, unsigned C) {
-//     // Check if there are unmapped id's
-//     // if yes then r[B] = unmapped register
-//     // else check registerContainer[ length] 
-//     // if it does not already exist
-//     // if already exists length++
-// }
+// r[B] will return a non-zero word
+void mapSegment(segmentContainer m, Seq_T unmappedIDs, registerContainer r,  unsigned B, unsigned C) {
+    word identifier;
+    Segment seg = Seq_new(0);
+    // Could not find a way to create a new sequence with an unsigned argument
+    // Using auxillary function to allocate empty sequences
+    padNewSegment(seg, r[C] );
 
-// // Unmapps segment m [ r[C] ], and adds the r[C] identifier
-// // into the available segments
-// int unMapSegment(segmentContainer m, registerContainer r, int C);
-
-// Writes the contents of r[C], only values from 0 to 255
-void output(registerContainer r, unsigned C) {
-    printf("%u\n", (r[C] % 256) );
+    if (Seq_length(unmappedIDs) == 0) {
+        identifier = findValidIdentifier(m);
+    } else {
+        identifier = ((uint32_t)(uintptr_t)Seq_remlo(unmappedIDs));
+    }
+    Table_put(m, Atom_int(identifier), seg);
+    r[B] = identifier;
+}
+// Seg will have item-number of 0's
+void padNewSegment(Segment seg, unsigned items) {
+    for (unsigned i = 0; i < items; i++) {
+        Seq_addhi(seg, 0);
+    }
+}
+// 0 < identifier < 2^32
+word findValidIdentifier(segmentContainer m) {
+    word identifier = (uint32_t)Table_length(m);
+        while (Table_get(m, Atom_int(identifier)) != NULL) {
+            identifier++;
+            if (identifier == UINT32_MAX) {
+                identifier = 1;
+            }
+        }
+    return identifier;
 }
 
-// Gets input and stores it into r[C],
-// value must be from 0 to 255.
-// Will have a full 32-bit word with every bit is 1
-void input(registerContainer r, unsigned C) {
-    int input;
-    input = getchar();
+// m[0] and unmapped memory will not be unmapped
+word unMapSegment(segmentContainer m, registerContainer r, unsigned C) {
+    void * removedItem = Table_remove(m, Atom_int(r[C]));
+    if (removedItem == NULL || r[C] == 0) {
+        exit(1);
+    }
+    return r[C];
+}
 
+// Only values from 0 to 255 will be printed
+// since a char is only a byte
+void output(registerContainer r, unsigned C) {
+    printf("%c", (char)r[C]);
+}
+
+// Input will only be negative during EOF
+void input(registerContainer r, unsigned C) {
+    int input = getchar();
     if (input == EOF) {
         r[C] = UINT32_MAX;
         return;
     }
-    r[C] = input % 256;
+    r[C] = input;
 }
 
-// // Duplicates segment m[ r[B] ] and usurps  m [ 0 ]
-// // The program counter will be set to r[C]
-// // Returns 1 if successful and -1 if unsuccessful
-// int loadProgram(segmentContainer m, registerContainer r, int B, int C);
+// Loading an unmapped segment is a checked run-time error
+void loadProgram(segmentContainer m, registerContainer r, unsigned B) {
+    Segment program = getSegment(m, r[B]);
+    Table_put(m, Atom_int(0), program);
+}
 
-// //  Loads value into register A
-// int loadValue(registerContainer r, int A, word value);
+// Frees segments from A[0], A[1], A[length]
+void freeSegments(const void *key, void **value, void *cl) {
+        (void)key;
+        (void)cl;
+        Seq_T seq = *value;
+        Seq_free(&seq);
+}
 
 #undef twopower32

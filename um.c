@@ -1,133 +1,131 @@
 #include "um.h"
-#include "assert.h"
 
-int main(int argc, char** argv) {
-    assert(argc < 3);
-    // Add more file handeling
-    FILE * fp = fopen(argv[1], "r");
-    run(fp);
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Runs a program until completion
+// Program will never be null
 int run(FILE * program) {
     uint32_t  r[8] = { 0 };
-    segmentContainer m = Table_new(2, NULL, NULL);
+    // Hints set arbitrarilly
+    segmentContainer m = Table_new(2, NULL, NULL);    
+    Seq_T unmappedIDs = Seq_new(0);
     Segment zero = readInstructions(program);
-    int programHome = (int)0;
-    const char * home = Atom_int(programHome);
-//     printf("Run: %s\n", home);
-    Table_put(m, home, zero);
+    Table_put(m, Atom_int((int)0), zero);
 
-    // Cast might become problematic
-    // Remember to recalculate this when a program is loaded
-        unsigned length = (unsigned)Table_length(zero);
-    for (unsigned programCounter = 0; programCounter < length; programCounter++) {
-        const char * instructionNumber = Atom_int(programCounter);
-        word instruction = getWord(m, home, instructionNumber);
-        int opCode = readOpCode(instruction);\
-        // printf("Instruction: %x\n", instruction);
-        // printf("Opcode: %d\n", opCode);
+    // Although it is up to the programmer to not overflow an instruction set
+    // I used the maximum possible value as a safety precaution
+    for (unsigned programCounter = 0; programCounter < UINT32_MAX; programCounter++) {
+        word instruction = getWord(zero, programCounter);
+        int opCode = readOpCode(instruction);
         switch (opCode) {
 
         case CMV:
 {           
-            uint32_t A =  CALC_A(instruction);
-            uint32_t B =  CALC_B(instruction);
-            uint32_t C =  CALC_C(instruction);
-            conditionalMove(r, A, B, C);
+        uint32_t A =  CALC_A(instruction);
+        uint32_t B =  CALC_B(instruction);
+        uint32_t C =  CALC_C(instruction);
+        conditionalMove(r, A, B, C);
 }
             break;
-        // case SLOAD:
-// {
-
-// }            
-        //     break;
-        // case SSTORE:
-//  {
-
-//  }           
-        //     break;
-        // case SSTORE:
-//  {
-
-//  }           
-        //     break;
-        // case ADD:
-//  {
-
-//  }           
-        //     break;
-        // case MULT:
-//  {
-
-//  }           
-        //     break;
-        // case DIVIDE:
-//  {
-
-//  }           
-        //     break;
-        // case NAND:
-//   {
-
-//   }          
-        //     break;
-        // case HALT:
-//  {
-
-//  }           
-        //     break;
-        // case MAP:
-//  {
-
-//  }           
-        //     break;
-        // case UMAP:
-//  {
-
-//  }           
-        //     break;
+        case SLOAD:
+{
+        unsigned A = CALC_A(instruction);
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        segmentedLoad(m, r, A, B, C);
+}            
+            break;
+        case SSTORE:
+ {
+        unsigned A = CALC_A(instruction);
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        segmentStore(m, r, A, B, C);
+ }           
+            break;
+        case ADD:
+ {
+        unsigned A = CALC_A(instruction);
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        add(r, A, B, C);
+ }           
+            break;
+        case MULT:
+ {
+        unsigned A = CALC_A(instruction);
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        multiply(r, A, B, C);
+ }           
+            break;
+        case DIVIDE:
+ {
+        unsigned A = CALC_A(instruction);
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        divide(r, A, B, C);
+ }           
+            break;
+        case NAND:
+  {
+        uint32_t A =  CALC_A(instruction);
+        uint32_t B =  CALC_B(instruction);
+        uint32_t C =  CALC_C(instruction);
+        NANDGate(r, A, B, C);
+  }          
+            break;
+        case HALT:
+ {
+        Halt();
+ }           
+            break;
+        case MAP:
+ {
+        uint32_t B =  CALC_B(instruction);
+        uint32_t C =  CALC_C(instruction);
+        mapSegment(m, unmappedIDs, r, B, C);
+ }           
+            break;
+        case UMAP:
+ {
+        uint32_t C =  CALC_C(instruction);
+        Seq_addhi(unmappedIDs, (void *)(uintptr_t)unMapSegment(m, r, C));
+ }           
+            break;
         case OUT:
 {
-            uint32_t C =  CALC_C(instruction);
-            output(r, C);
+        uint32_t C =  CALC_C(instruction);
+        output(r, C);
 }           
             break;
         case IN:
 {
-            uint32_t C =  CALC_C(instruction);
-            input(r, C);
+        uint32_t C =  CALC_C(instruction);
+        input(r, C);
 }           
             break;
-        // case LOADP:
+        case LOADP:
 {
-
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        loadProgram(m, r, B);
+        // - 1 counteracts the increment at the end of the loop 
+        programCounter = r[C] - 1;
+        zero = getSegment(m, r[B]);
 }            
-        //     break;
-        // case LOADV:
+            break;
+        case LOADV:
  {
-
+        unsigned A = Bitpack_getu(instruction, 3, 25);
+        loadValue(r, A, instruction);
  }           
-        //     break;
+            break;
         default:
-            fprintf(stderr, "Opcode out of bounds.\n");
+
             break;
         }
     }
+    Table_map(m, freeSegments, NULL);
     Table_free(&m);
+    Seq_free(&unmappedIDs);
     return 0;
 }
+
