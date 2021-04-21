@@ -1,14 +1,16 @@
 #include "um.h"
 
-// Runs a program until completion
+// Program will never be null
 int run(FILE * program) {
     uint32_t  r[8] = { 0 };
     // Hints set arbitrarilly
     segmentContainer m = Table_new(2, NULL, NULL);    
-    Segment zero = readInstructions(program);
     Seq_T unmappedIDs = Seq_new(0);
+    Segment zero = readInstructions(program);
     Table_put(m, Atom_int((int)0), zero);
 
+    // Although it is up to the programmer to not overflow an instruction set
+    // I used the maximum possible value as a safety precaution
     for (unsigned programCounter = 0; programCounter < UINT32_MAX; programCounter++) {
         word instruction = getWord(zero, programCounter);
         int opCode = readOpCode(instruction);
@@ -121,7 +123,9 @@ int run(FILE * program) {
             break;
         }
     }
+    Table_map(m, freeSegments, NULL);
     Table_free(&m);
     Seq_free(&unmappedIDs);
     return 0;
 }
+

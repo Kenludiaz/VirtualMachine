@@ -7,5 +7,6 @@
 #include "table.h"
 #include "assert.h"
 #include "aux.h"
+
 // Runs a program until completion
 int run(FILE * program);

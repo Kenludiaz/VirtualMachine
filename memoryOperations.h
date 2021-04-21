@@ -52,7 +52,6 @@ static inline uint32_t CALC_C(word instruction) {
     return Bitpack_getu(instruction, 3, 0);
 }
 
-
 // Copies r[B] to r[A] if r[C] != 0
 int conditionalMove(threeRegisters);
 
@@ -108,3 +107,6 @@ void loadProgram(segmentContainer m, registerContainer r, unsigned B);
 static inline void loadValue(registerContainer r, unsigned A, word value) {
     r[A] = Bitpack_getu(value, 25, 0);
 }
+
+// Frees segments inside segmentContainer
+void freeSegments(const void *key, void **value, void *cl);

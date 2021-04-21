@@ -2,10 +2,10 @@
 #include "bitpack.h"
 
 
-// Reads instructions from fp and
-// writes it to a segment
+// Reads instructions from fp 
+// Fp will never be null
 Segment readInstructions(FILE * fp) {
-    // Initiated length is arbitrarilly chosen
+    // Hint was arbitrarily chosen
     Segment seg = Seq_new(2);
 
     int input = 0;
@@ -24,7 +24,7 @@ Segment readInstructions(FILE * fp) {
     }
     return seg;
 }
-
+// Accessing unmapped segments is a checked run-time error
 Segment getSegment(segmentContainer segments, unsigned index) {
     void * segmentPointer = Table_get(segments, Atom_int(index));
     if (segmentPointer == NULL) {
@@ -32,17 +32,16 @@ Segment getSegment(segmentContainer segments, unsigned index) {
     }
     return (Segment)segmentPointer;
 }
-
+// Accessing words out of bounds in a checked run-time error
 word getWord(Segment seg, unsigned offset) {
     return ((uint32_t)(uintptr_t)Seq_get(seg, offset));
 }
 
-// Reads the first four bytes of the instruction
-// and returns the appropriate Opcode
+// Will return the first four bits of a word
 int readOpCode(word instruction) {
     return (int)(instruction >> 28);
 }
-
+// Every register will never exceed the value of the typedef of word
 int conditionalMove(threeRegisters) {
     if (r[C] != 0) {
         r[A] = r[B];
@@ -50,29 +49,29 @@ int conditionalMove(threeRegisters) {
     }
     return -1;
 }
-
+// Checked run-time error to load unmapped memory
 void segmentedLoad(segmentContainer m, threeRegisters) {
     Segment seg = getSegment( m, r[B] );
     word Word = getWord( seg, r[C]);
     r[A] = Word;
 }
-
+// Checked run-time error to store in unmapped memory
 void segmentStore(segmentContainer m, threeRegisters) {
     Segment seg = getSegment(m, r[A]);
     Seq_put(seg, r[B], (void *)(uintptr_t)r[C]);
 }
 
-// Adds r[B] and r[C] into r[A]
+// r[A] will always be < 2^32
 void add(threeRegisters) {
     r[A] = ((r[B] + r[C]) % twopower32);
 }
 
-// Multiplies r[B] and r[C] into r[A]
+// r[A] will always be < 2^32
 void multiply(threeRegisters) {
     r[A] = ((r[B] * r[C]) % twopower32);
 }
 
-// Divides r[B] by r[C] and saved into r[A] (integer divition)
+// r[A] will always be an int
 void divide(threeRegisters) {
     r[A] = (r[B] / r[C]);
 }
@@ -87,9 +86,7 @@ void Halt() {
     exit(0);
 }
 
-// Creates a segment with r[C] number of words
-// A currently unused bit identifier will be placed in r[B]
-// Will map to m[ r[B] ]
+// r[B] will return a non-zero word
 void mapSegment(segmentContainer m, Seq_T unmappedIDs, registerContainer r,  unsigned B, unsigned C) {
     word identifier;
     Segment seg = Seq_new(0);
@@ -105,13 +102,13 @@ void mapSegment(segmentContainer m, Seq_T unmappedIDs, registerContainer r,  uns
     Table_put(m, Atom_int(identifier), seg);
     r[B] = identifier;
 }
-
+// Seg will have item-number of 0's
 void padNewSegment(Segment seg, unsigned items) {
     for (unsigned i = 0; i < items; i++) {
         Seq_addhi(seg, 0);
     }
 }
-
+// 0 < identifier < 2^32
 word findValidIdentifier(segmentContainer m) {
     word identifier = (uint32_t)Table_length(m);
         while (Table_get(m, Atom_int(identifier)) != NULL) {
@@ -123,8 +120,7 @@ word findValidIdentifier(segmentContainer m) {
     return identifier;
 }
 
-// Unmapps segment m [ r[C] ], and adds the r[C] identifier
-// into the available segments
+// m[0] and unmapped memory will not be unmapped
 word unMapSegment(segmentContainer m, registerContainer r, unsigned C) {
     void * removedItem = Table_remove(m, Atom_int(r[C]));
     if (removedItem == NULL || r[C] == 0) {
@@ -133,14 +129,13 @@ word unMapSegment(segmentContainer m, registerContainer r, unsigned C) {
     return r[C];
 }
 
-// Writes the contents of r[C], only values from 0 to 255
+// Only values from 0 to 255 will be printed
+// since a char is only a byte
 void output(registerContainer r, unsigned C) {
     printf("%c", (char)r[C]);
 }
 
-// Gets input and stores it into r[C],
-// value must be from 0 to 255.
-// Will have a full 32-bit word with every bit is 1
+// Input will only be negative during EOF
 void input(registerContainer r, unsigned C) {
     int input = getchar();
     if (input == EOF) {
@@ -150,12 +145,18 @@ void input(registerContainer r, unsigned C) {
     r[C] = input;
 }
 
-// Duplicates segment m[ r[B] ] and usurps  m [ 0 ]
-// The program counter will be set to r[C]
+// Loading an unmapped segment is a checked run-time error
 void loadProgram(segmentContainer m, registerContainer r, unsigned B) {
     Segment program = getSegment(m, r[B]);
     Table_put(m, Atom_int(0), program);
 }
 
+// Frees segments from A[0], A[1], A[length]
+void freeSegments(const void *key, void **value, void *cl) {
+        (void)key;
+        (void)cl;
+        Seq_T seq = *value;
+        Seq_free(&seq);
+}
 
 #undef twopower32
