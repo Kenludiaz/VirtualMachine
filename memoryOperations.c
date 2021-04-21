@@ -1,8 +1,6 @@
 #include "memoryOperations.h"
 #include "bitpack.h"
 
-// Defined macro "max" in stdint was overflowing
-#define twopower32 4294967296
 
 // Reads instructions from fp and
 // writes it to a segment
@@ -30,21 +28,12 @@ Segment readInstructions(FILE * fp) {
 }
 
 // Returns the word at segments[index][offset]
-word getWord(segmentContainer segments, const char * index, uint32_t offset) {
-    void * segmentPtr = Table_get(segments, index);
-    
-    printf("Offset: %u\n", offset);
-
-    if (segmentPtr == NULL) {
-        fprintf(stderr, "Segment not mapped.\n");
+Segment getSegment(segmentContainer segments, unsigned index) {
+    void * segmentPointer = Table_get(segments, Atom_int(index));
+    if (segmentPointer == NULL) {
         Halt();
     }
-    Segment segment = (Segment)segmentPtr;
-    void * wordPtr = Seq_get(segment, offset);
-    printf("Word: %u\n",*(uint32_t *)wordPtr);
-
-    word Word = (*(uint32_t *)wordPtr);
-    return Word;
+    return (Segment)segmentPointer;
 }
 
 // Reads the first four bytes of the instruction
@@ -108,7 +97,7 @@ void Halt() {
 
 // Writes the contents of r[C], only values from 0 to 255
 void output(registerContainer r, unsigned C) {
-    printf("%u\n", (r[C] % 256) );
+    printf("%c\n", (char)r[C]);
 }
 
 // Gets input and stores it into r[C],
@@ -117,20 +106,20 @@ void output(registerContainer r, unsigned C) {
 void input(registerContainer r, unsigned C) {
     int input;
     input = getchar();
-
     if (input == EOF) {
         r[C] = UINT32_MAX;
         return;
     }
-    r[C] = input % 256;
+    r[C] = input;
 }
 
-// // Duplicates segment m[ r[B] ] and usurps  m [ 0 ]
-// // The program counter will be set to r[C]
-// // Returns 1 if successful and -1 if unsuccessful
-// int loadProgram(segmentContainer m, registerContainer r, int B, int C);
+// Duplicates segment m[ r[B] ] and usurps  m [ 0 ]
+// The program counter will be set to r[C]
+// Returns 1 if successful and -1 if unsuccessful
+void loadProgram(segmentContainer m, registerContainer r, unsigned B) {
+    Segment program = getSegment(m, r[B]);
+    Table_put(m, Atom_int(0), program);
+}
 
-// //  Loads value into register A
-// int loadValue(registerContainer r, int A, word value);
 
 #undef twopower32

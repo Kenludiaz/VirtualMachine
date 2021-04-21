@@ -1,5 +1,4 @@
 #include "um.h"
-#include "assert.h"
 
 int main(int argc, char** argv) {
     assert(argc < 3);
@@ -13,18 +12,21 @@ int main(int argc, char** argv) {
 int run(FILE * program) {
     uint32_t  r[8] = { 0 };
     segmentContainer m = Table_new(2, NULL, NULL);
-    printf("Hello World\n");
     Segment zero = readInstructions(program);
-    int programHome = (int)0;
-    const char * home = Atom_int(programHome);
+    const char * home = Atom_int((int)0);
     Table_put(m, home, zero);
+    uint32_t a = 0;
+    uint32_t b = 9;
+    uint32_t c = UINT32_MAX;
+        printf("Unsigned Conversion: %d\n", (int)a);
+        printf("Unsigned Conversion: %d\n", (int)b);
+        printf("Unsigned Conversion: %d\n", (int)c);
     // Remember to recalculate this when a program is loaded
-    int length = Seq_length(zero);
-    for (int programCounter = 0; programCounter < length; programCounter++) {
-        word instruction = (uint32_t)(uintptr_t)Seq_remlo(zero);
-        printf("Instruction: %x\n", instruction);
+    for (unsigned programCounter = 0; programCounter < twopower32; programCounter++) {
+        word instruction = (uint32_t)(uintptr_t)Seq_get(zero, programCounter);
+        // printf("Instruction: %x\n", instruction);
         int opCode = readOpCode(instruction);
-        printf("Opcode: %d\n", opCode);
+        // printf("Opcode: %d\n", opCode);
         switch (opCode) {
 
         case CMV:
@@ -65,11 +67,14 @@ int run(FILE * program) {
 
 //  }           
         //     break;
-        // case NAND:
-//   {
-
-//   }          
-        //     break;
+        case NAND:
+  {
+        uint32_t A =  CALC_A(instruction);
+        uint32_t B =  CALC_B(instruction);
+        uint32_t C =  CALC_C(instruction);
+        NANDGate(r, A, B, C);
+  }          
+            break;
         // case HALT:
 //  {
 
@@ -97,18 +102,28 @@ int run(FILE * program) {
             input(r, C);
 }           
             break;
-        // case LOADP:
+        case LOADP:
 {
-
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        loadProgram(m, r, B);
+        programCounter = r[C];
+        // This might point to the same zero as in before the loop
+        // length = Seg_length(zero);
 }            
-        //     break;
-        // case LOADV:
+            break;
+        case LOADV:
  {
-
+        unsigned A = Bitpack_getu(instruction, 3, 25);
+        loadValue(r, A, instruction);
  }           
-        //     break;
+            break;
+        case 14:
+                break;
+        case 15:
+                break;
         default:
-            fprintf(stderr, "Opcode out of bounds.\n");
+        //     fprintf(stderr, "Opcode out of bounds.\n");
             break;
         }
     }

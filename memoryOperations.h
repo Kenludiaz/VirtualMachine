@@ -16,8 +16,9 @@ typedef Table_T     segmentContainer;
 typedef Seq_T                Segment;
 typedef uint32_t                word;
 
+// Defined macro "max" in stdint was overflowing
+#define twopower32 4294967296
 #define threeRegisters registerContainer r, unsigned A, unsigned B, unsigned C
-
 enum ops {CMV = 0, SLOAD, SSTORE, ADD, MULT, DIVIDE, NAND, HALT, MAP,
                                       UMAP, OUT, IN, LOADP, LOADV};
 enum regs { r0 = 0, r1, r2, r3, r4, r5, r6, r7 };
@@ -92,7 +93,9 @@ void input(registerContainer r, unsigned C);
 // Duplicates segment m[ r[B] ] and usurps  m [ 0 ]
 // The program counter will be set to r[C]
 // Returns 1 if successful and -1 if unsuccessful
-int loadProgram(segmentContainer m, registerContainer r, unsigned B, unsigned C);
+void loadProgram(segmentContainer m, registerContainer r, unsigned B);
 
 //  Loads value into register A
-int loadValue(registerContainer r, unsigned A, word value);
+static inline void loadValue(registerContainer r, unsigned A, word value) {
+    r[A] = Bitpack_getu(value, 25, 0);
+}
