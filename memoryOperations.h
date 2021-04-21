@@ -2,6 +2,7 @@
    Registers will hold a 32-bit word 
    Memory segments will be stored as tables in order to
    allow ease of lookup, addition, and removal at any segment
+   Memory will be stored in a sequence with the form of unsigned 32-bit words
 */
 #include "table.h"
 #include <stdint.h>
@@ -33,8 +34,11 @@ void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
 // Returns the segment at segments[index]
 Segment getSegment(segmentContainer segments, unsigned index);
 
+// Returns the word at segment[offset]
+word getWord(Segment seg, unsigned offset);
+
 // Reads the first four bytes of the instruction
-// and returns the appropriate Opcode
+// and returns the appropriate opCode
 int readOpCode(word instruction);
 
 // Returns the corresponding values to from an instruction
@@ -76,18 +80,24 @@ void Halt();
 // Creates a segment with r[C] number of words
 // A currently unused bit identifier will be placed in r[B]
 // Will map to m[ r[B] ]
-int mapSegment(segmentContainer m, registerContainer r,  unsigned B, unsigned C);
+void mapSegment(segmentContainer m, Seq_T unmappedIDs, registerContainer r,  unsigned B, unsigned C);
 
-// Unmapps segment m [ r[C] ], and adds the r[C] identifier
-// into the available segments
-int unMapSegment(segmentContainer m, registerContainer r, unsigned C);
+// Adds items amount of elements ('0's) to seg 
+void padNewSegment(Segment seg, unsigned items);
+
+// Loops until ID is not mapped into m
+word findValidIdentifier(segmentContainer m);
+
+
+// Unmapps segment m [ r[C] ], and returns the r[C]
+word unMapSegment(segmentContainer m, registerContainer r, unsigned C);
 
 // Writes the contents of r[C], only values from 0 to 255
 void output(registerContainer r, unsigned C);
 
 // Gets input and stores it into r[C],
 // value must be from 0 to 255.
-// Will have a full 32-bit word with every bit is 1
+// Will equal UINT32_Max if EOF
 void input(registerContainer r, unsigned C);
 
 // Duplicates segment m[ r[B] ] and usurps  m [ 0 ]

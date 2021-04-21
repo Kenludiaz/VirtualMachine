@@ -1,66 +1,67 @@
 #include "um.h"
 
-int main(int argc, char** argv) {
-    assert(argc < 3);
-    // Add more file handeling
-    FILE * fp = fopen(argv[1], "r");
-    run(fp);
-    fclose(fp);
-}
-
 // Runs a program until completion
 int run(FILE * program) {
     uint32_t  r[8] = { 0 };
-    segmentContainer m = Table_new(2, NULL, NULL);
+    // Hints set arbitrarilly
+    segmentContainer m = Table_new(2, NULL, NULL);    
     Segment zero = readInstructions(program);
-    const char * home = Atom_int((int)0);
-    Table_put(m, home, zero);
+    Seq_T unmappedIDs = Seq_new(0);
+    Table_put(m, Atom_int((int)0), zero);
 
     for (unsigned programCounter = 0; programCounter < UINT32_MAX; programCounter++) {
-        word instruction = (uint32_t)(uintptr_t)Seq_get(zero, programCounter);
-        // printf("Instruction: %x\n", instruction);
+        word instruction = getWord(zero, programCounter);
         int opCode = readOpCode(instruction);
-        // printf("Opcode: %d\n", opCode);
         switch (opCode) {
 
         case CMV:
 {           
-            uint32_t A =  CALC_A(instruction);
-            uint32_t B =  CALC_B(instruction);
-            uint32_t C =  CALC_C(instruction);
-            conditionalMove(r, A, B, C);
+        uint32_t A =  CALC_A(instruction);
+        uint32_t B =  CALC_B(instruction);
+        uint32_t C =  CALC_C(instruction);
+        conditionalMove(r, A, B, C);
 }
             break;
-        // case SLOAD:
-// {
-
-// }            
-        //     break;
-        // case SSTORE:
-//  {
-
-//  }           
-        //     break;
-        // case SSTORE:
-//  {
-
-//  }           
-        //     break;
-        // case ADD:
-//  {
-
-//  }           
-        //     break;
-        // case MULT:
-//  {
-
-//  }           
-        //     break;
-        // case DIVIDE:
-//  {
-
-//  }           
-        //     break;
+        case SLOAD:
+{
+        unsigned A = CALC_A(instruction);
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        segmentedLoad(m, r, A, B, C);
+}            
+            break;
+        case SSTORE:
+ {
+        unsigned A = CALC_A(instruction);
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        segmentStore(m, r, A, B, C);
+ }           
+            break;
+        case ADD:
+ {
+        unsigned A = CALC_A(instruction);
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        add(r, A, B, C);
+ }           
+            break;
+        case MULT:
+ {
+        unsigned A = CALC_A(instruction);
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        multiply(r, A, B, C);
+ }           
+            break;
+        case DIVIDE:
+ {
+        unsigned A = CALC_A(instruction);
+        unsigned B = CALC_B(instruction);
+        unsigned C = CALC_C(instruction);
+        divide(r, A, B, C);
+ }           
+            break;
         case NAND:
   {
         uint32_t A =  CALC_A(instruction);
@@ -74,16 +75,19 @@ int run(FILE * program) {
         Halt();
  }           
             break;
-        // case MAP:
-//  {
-
-//  }           
-        //     break;
-        // case UMAP:
-//  {
-
-//  }           
-        //     break;
+        case MAP:
+ {
+        uint32_t B =  CALC_B(instruction);
+        uint32_t C =  CALC_C(instruction);
+        mapSegment(m, unmappedIDs, r, B, C);
+ }           
+            break;
+        case UMAP:
+ {
+        uint32_t C =  CALC_C(instruction);
+        Seq_addhi(unmappedIDs, (void *)(uintptr_t)unMapSegment(m, r, C));
+ }           
+            break;
         case OUT:
 {
         uint32_t C =  CALC_C(instruction);
@@ -100,12 +104,9 @@ int run(FILE * program) {
 {
         unsigned B = CALC_B(instruction);
         unsigned C = CALC_C(instruction);
-        // printf("B : %u, C : %u\n", B, C);
-        // printf("R[B] : %u, R[C] : %u\n", r[B], r[C]);
         loadProgram(m, r, B);
-        // -1 counteracts the increment at the end of the loop 
+        // - 1 counteracts the increment at the end of the loop 
         programCounter = r[C] - 1;
-        // This might point to the same zero as in before the loop
         zero = getSegment(m, r[B]);
 }            
             break;
@@ -115,15 +116,12 @@ int run(FILE * program) {
         loadValue(r, A, instruction);
  }           
             break;
-        case 14:
-                break;
-        case 15:
-                break;
         default:
-        //     fprintf(stderr, "Opcode out of bounds.\n");
+
             break;
         }
     }
     Table_free(&m);
+    Seq_free(&unmappedIDs);
     return 0;
 }
