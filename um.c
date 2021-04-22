@@ -20,6 +20,8 @@ int run(FILE * program) {
     segmentContainer m = Table_new(2, NULL, NULL);    
     Seq_T unmappedIDs = Seq_new(0);
     Segment zero = readInstructions(program);
+    printf("Hello: \n");
+    
     Table_put(m, Atom_int((int)0), zero);
 
     // Although it is up to the programmer to not overflow an instruction set
@@ -27,6 +29,7 @@ int run(FILE * program) {
     for (unsigned programCounter = 0; programCounter < UINT32_MAX; programCounter++) {
         word instruction = getWord(zero, programCounter);
         int opCode = readOpCode(instruction);
+        printf("Opcode: %d\n", opCode);
         switch (opCode) {
 
         case CMV:

@@ -11,11 +11,12 @@
 #include "atom.h"
 #include "bitpack.h"
 #include "seq.h"
+#include "array.h"
 
 typedef uint32_t * registerContainer;
 typedef Table_T     segmentContainer;
-typedef Seq_T                Segment;
 typedef uint32_t                word;
+typedef word *               Segment;
 
 // Defined macro "max" in stdint was overflowing
 #define twopower32 4294967296
@@ -81,8 +82,7 @@ void Halt();
 // Will map to m[ r[B] ]
 void mapSegment(segmentContainer m, Seq_T unmappedIDs, registerContainer r,  unsigned B, unsigned C);
 
-// Adds items amount of elements ('0's) to seg 
-void padNewSegment(Segment seg, unsigned items);
+
 
 // Loops until ID is not mapped into m
 word findValidIdentifier(segmentContainer m);
@@ -110,3 +110,8 @@ static inline void loadValue(registerContainer r, unsigned A, word value) {
 
 // Frees segments inside segmentContainer
 void freeSegments(const void *key, void **value, void *cl);
+
+#undef   registerContainer
+#undef    segmentContainer
+#undef             Segment
+#undef                word

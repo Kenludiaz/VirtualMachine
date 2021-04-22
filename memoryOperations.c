@@ -5,10 +5,20 @@
 // Reads instructions from fp 
 // Fp will never be null
 Segment readInstructions(FILE * fp) {
-    // Hint was arbitrarily chosen
-    Segment seg = Seq_new(2);
+
+    // Code obtained from Tim Colaneri
+    // Goes to the beginning of the file
+    fseek(fp, 0, SEEK_END);
+    // Dividing by the 4 Bytes containted in an instruction
+    // gives us the total number of instructions
+    int instructions = ((ftell(fp)) / 4);
+    fseek(fp, 0, SEEK_SET);
+    // printf("Instructions: %d\n", instructions);
+    word seg[instructions];
+    // printf("Array Size: %d\n", Array_length(seg));
 
     int input = 0;
+    int counter = 0;
     while ((input = getc(fp)) != EOF) {
         word currentWord = 0;
 
@@ -20,7 +30,7 @@ Segment readInstructions(FILE * fp) {
 		input = getc(fp);
 		currentWord = Bitpack_newu(currentWord, 8, 0, input);
         
-        Seq_addhi(seg, (void *)(uintptr_t)currentWord);
+        seg[counter++] = currentWord;
     }
     return seg;
 }
@@ -34,7 +44,7 @@ Segment getSegment(segmentContainer segments, unsigned index) {
 }
 // Accessing words out of bounds in a checked run-time error
 word getWord(Segment seg, unsigned offset) {
-    return ((uint32_t)(uintptr_t)Seq_get(seg, offset));
+    return ((uint32_t)(uintptr_t)Array_get(seg, offset));
 }
 
 // Will return the first four bits of a word
@@ -52,13 +62,12 @@ int conditionalMove(threeRegisters) {
 // Checked run-time error to load unmapped memory
 void segmentedLoad(segmentContainer m, threeRegisters) {
     Segment seg = getSegment( m, r[B] );
-    word Word = getWord( seg, r[C]);
-    r[A] = Word;
+    r[A] = seg[ r[C] ];
 }
 // Checked run-time error to store in unmapped memory
 void segmentStore(segmentContainer m, threeRegisters) {
     Segment seg = getSegment(m, r[A]);
-    Seq_put(seg, r[B], (void *)(uintptr_t)r[C]);
+    Array_put(seg, r[B], (void *)(uintptr_t)r[C]);
 }
 
 // r[A] will always be < 2^32
@@ -89,10 +98,9 @@ void Halt() {
 // r[B] will return a non-zero word
 void mapSegment(segmentContainer m, Seq_T unmappedIDs, registerContainer r,  unsigned B, unsigned C) {
     word identifier;
-    Segment seg = Seq_new(0);
+    Segment seg = Array_new(r[C], sizeof(uintptr_t));
     // Could not find a way to create a new sequence with an unsigned argument
     // Using auxillary function to allocate empty sequences
-    padNewSegment(seg, r[C] );
 
     if (Seq_length(unmappedIDs) == 0) {
         identifier = findValidIdentifier(m);
@@ -102,12 +110,8 @@ void mapSegment(segmentContainer m, Seq_T unmappedIDs, registerContainer r,  uns
     Table_put(m, Atom_int(identifier), seg);
     r[B] = identifier;
 }
-// Seg will have item-number of 0's
-void padNewSegment(Segment seg, unsigned items) {
-    for (unsigned i = 0; i < items; i++) {
-        Seq_addhi(seg, 0);
-    }
-}
+
+
 // 0 < identifier < 2^32
 word findValidIdentifier(segmentContainer m) {
     word identifier = (uint32_t)Table_length(m);
