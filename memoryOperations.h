@@ -16,7 +16,7 @@
 typedef uint32_t * registerContainer;
 typedef Table_T     segmentContainer;
 typedef uint32_t                word;
-typedef word *               Segment;
+typedef Array_T               Segment;
 
 // Defined macro "max" in stdint was overflowing
 #define twopower32 4294967296

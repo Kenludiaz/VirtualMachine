@@ -1,6 +1,6 @@
 #include "memoryOperations.h"
 #include "bitpack.h"
-
+#include "array.h"
 
 // Reads instructions from fp 
 // Fp will never be null
@@ -14,7 +14,7 @@ Segment readInstructions(FILE * fp) {
     int instructions = ((ftell(fp)) / 4);
     fseek(fp, 0, SEEK_SET);
     // printf("Instructions: %d\n", instructions);
-    word seg[instructions];
+    Segment zero = Array_new(instructions, uint32_t);
     // printf("Array Size: %d\n", Array_length(seg));
 
     int input = 0;
