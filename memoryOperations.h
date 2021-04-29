@@ -12,11 +12,12 @@
 #include "bitpack.h"
 #include "seq.h"
 #include "array.h"
+#include "string.h"
 
 typedef uint32_t * registerContainer;
 typedef Table_T     segmentContainer;
 typedef uint32_t                word;
-typedef Array_T               Segment;
+typedef word *               Segment;
 
 // Defined macro "max" in stdint was overflowing
 #define twopower32 4294967296
@@ -36,7 +37,10 @@ void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
 Segment getSegment(segmentContainer segments, unsigned index);
 
 // Returns the word at segment[offset]
-word getWord(Segment seg, unsigned offset);
+static inline word getWord(Segment seg, unsigned offset) {
+    return seg[offset];
+}
+
 
 // Reads the first four bytes of the instruction
 // and returns the appropriate opCode
@@ -110,6 +114,8 @@ static inline void loadValue(registerContainer r, unsigned A, word value) {
 
 // Frees segments inside segmentContainer
 void freeSegments(const void *key, void **value, void *cl);
+// Frees words inside a segment
+// void freeWords(Array_T array, int idx, void *elem, void *cl), void *cl);
 
 #undef   registerContainer
 #undef    segmentContainer

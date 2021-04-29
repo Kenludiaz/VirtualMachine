@@ -1,5 +1,11 @@
 # Kenneth Lu Diaz
 
+## Acknowledgements
+Tim was able to assist me in coming up with an algorithm for finding the number of instructions fed to the um.
+** See readInstructions function in memoryOperations.c
+
+
+
 ## Architecture
  - um.c
    - Processes file pointer and runs the program

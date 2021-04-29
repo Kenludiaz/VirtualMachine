@@ -20,7 +20,7 @@ int run(FILE * program) {
     segmentContainer m = Table_new(2, NULL, NULL);    
     Seq_T unmappedIDs = Seq_new(0);
     Segment zero = readInstructions(program);
-    printf("Hello: \n");
+//     printf("Hello: \n");
     
     Table_put(m, Atom_int((int)0), zero);
 
@@ -29,7 +29,7 @@ int run(FILE * program) {
     for (unsigned programCounter = 0; programCounter < UINT32_MAX; programCounter++) {
         word instruction = getWord(zero, programCounter);
         int opCode = readOpCode(instruction);
-        printf("Opcode: %d\n", opCode);
+       //  printf("Opcode: %d\n", opCode);
         switch (opCode) {
 
         case CMV:
@@ -104,6 +104,7 @@ int run(FILE * program) {
  {
         uint32_t C =  CALC_C(instruction);
         Seq_addhi(unmappedIDs, (void *)(uintptr_t)unMapSegment(m, r, C));
+        unMapSegment(m, r, C);
  }           
             break;
         case OUT:
