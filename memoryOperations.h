@@ -8,14 +8,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "atom.h"
 #include "bitpack.h"
 #include "seq.h"
-#include "array.h"
-#include "string.h"
 
 typedef uint32_t * registerContainer;
-typedef Table_T     segmentContainer;
+typedef Seq_T       segmentContainer;
 typedef uint32_t                word;
 typedef word *               Segment;
 
@@ -113,7 +110,8 @@ static inline void loadValue(registerContainer r, unsigned A, word value) {
 }
 
 // Frees segments inside segmentContainer
-void freeSegments(const void *key, void **value, void *cl);
+void freeSegments(segmentContainer m);
+
 // Frees words inside a segment
 // void freeWords(Array_T array, int idx, void *elem, void *cl), void *cl);
 

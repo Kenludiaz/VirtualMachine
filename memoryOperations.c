@@ -14,7 +14,6 @@ Segment readInstructions(FILE * fp) {
     // gives us the total number of instructions
     int instructions = ((ftell(fp)) / 4);
     fseek(fp, 0, SEEK_SET);
-    printf("Instructions: %d\n", instructions);
     Segment zero = calloc(instructions, sizeof(word));
     // printf("Array Size: %d\n", Array_length(seg));
 
@@ -39,7 +38,7 @@ Segment readInstructions(FILE * fp) {
 }
 // Accessing unmapped segments is a checked run-time error
 Segment getSegment(segmentContainer segments, unsigned index) {
-    void * segmentPointer = Table_get(segments, Atom_int(index));
+    void * segmentPointer = Seq_get(segments, index);
     if (segmentPointer == NULL) {
         exit(1);
     }
@@ -66,8 +65,7 @@ void segmentedLoad(segmentContainer m, threeRegisters) {
 // Checked run-time error to store in unmapped memory
 void segmentStore(segmentContainer m, threeRegisters) {
     Segment seg = getSegment(m, r[A]);
-
-    seg[r[B]] = r[C];
+    seg[ r[B] ] = r[C];
 }
 
 // r[A] will always be < 2^32
@@ -97,21 +95,22 @@ void Halt() {
 
 // r[B] will return a non-zero word
 void mapSegment(segmentContainer m, Seq_T unmappedIDs, registerContainer r,  unsigned B, unsigned C) {
-    word identifier;
+    unsigned identifier;
     Segment seg = calloc(r[C], sizeof(word));
 
     if (Seq_length(unmappedIDs) == 0) {
-        identifier = Table_length(m);
+        identifier = Seq_length(m);
+        Seq_addhi(m, seg);
     } else {
         identifier = ((uint32_t)(uintptr_t)Seq_remlo(unmappedIDs));
+        Seq_put(m, identifier, seg);
     }
-    Table_put(m, Atom_int(identifier), seg);
     r[B] = identifier;
 }
 
 // m[0] and unmapped memory will not be unmapped
 word unMapSegment(segmentContainer m, registerContainer r, unsigned C) {
-    void * removedItem = Table_remove(m, Atom_int(r[C]));
+    void * removedItem = Seq_put(m, r[C], 0);
     if (removedItem == NULL || r[C] == 0) {
         exit(1);
     }
@@ -137,16 +136,17 @@ void input(registerContainer r, unsigned C) {
 // Loading an unmapped segment is a checked run-time error
 void loadProgram(segmentContainer m, registerContainer r, unsigned B) {
     Segment program = getSegment(m, r[B]);
-    Table_put(m, Atom_int(0), program);
+    Seq_put(m, 0, program);
 }
 
 // Frees segments from A[0], A[1], A[length]
-void freeSegments(const void *key, void **value, void *cl) {
-    (void)key;
-    (void)cl;
-    word * seg = *value;
-    // Array_map(seq, freeSegments, NULL);
-    free(seg);
+void freeSegments(segmentContainer m) {
+    int length = Seq_length(m); 
+    int i = 0;
+    for ( ; i < length; i++) {
+        void * item = Seq_remlo(m);
+        free(item);
+    }
 }
 
 // Frees words from A[0], A[1], A[length]
