@@ -1,5 +1,4 @@
 #include "memoryOperations.h"
-#include "bitpack.h"
 #include "array.h"
 #include "stdio.h"
 
@@ -15,24 +14,21 @@ Segment readInstructions(FILE * fp) {
     int instructions = ((ftell(fp)) / 4);
     fseek(fp, 0, SEEK_SET);
     Segment zero = calloc(instructions, sizeof(word));
-    // printf("Array Size: %d\n", Array_length(seg));
 
     int input = 0;
     int counter = 0;
     while ((input = getc(fp)) != EOF) {
         word currentWord = 0;
-
-        currentWord = Bitpack_newu(currentWord, 8, 24, input);
+        currentWord = newWord(currentWord, 24, input);
 		input = getc(fp);
-		currentWord = Bitpack_newu(currentWord, 8, 16, input);
+        currentWord = newWord(currentWord, 16, input);
 		input = getc(fp);
-		currentWord = Bitpack_newu(currentWord, 8, 8, input);
+        currentWord = newWord(currentWord, 8 , input);
 		input = getc(fp);
-		currentWord = Bitpack_newu(currentWord, 8, 0, input);
+        currentWord = newWord(currentWord, 0 , input);
         
         // printf("Word: %u\n", currentWord);
         zero[counter++] = currentWord;
-        // printf("Array Get : %u\n", *(uint32_t *)Array_get(zero, counter - 1));
     }
     return zero;
 }

@@ -27,6 +27,18 @@ enum regs { r0 = 0, r1, r2, r3, r4, r5, r6, r7 };
 // writes it to a segment[0]
 Segment readInstructions(FILE * fp);
 
+// As long as lsb < word, will add value to word
+static inline word newWord(word currentWord, uint8_t lsb, int input) {
+    word mask = UINT32_MAX;
+    mask = ~(((mask << 24) >> 24) << lsb);
+    currentWord = currentWord & mask;
+
+    input = (input << lsb);
+    currentWord = currentWord | input;
+
+    return currentWord;
+}
+
 // Writes segment[segmentIndex] into fp
 void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
 
@@ -45,13 +57,13 @@ int readOpCode(word instruction);
 
 // Returns the corresponding values to from an instruction
 static inline uint32_t CALC_A(word instruction) {
-    return Bitpack_getu(instruction, 3, 6);
+    return ((instruction << (23)) >> 29);
 }
 static inline uint32_t CALC_B(word instruction) {
-    return Bitpack_getu(instruction, 3, 3);
+    return ((instruction << (26)) >> 29);
 }
 static inline uint32_t CALC_C(word instruction) {
-    return Bitpack_getu(instruction, 3, 0);
+    return ((instruction << (29)) >> 29);
 }
 
 // Copies r[B] to r[A] if r[C] != 0
@@ -106,7 +118,7 @@ void loadProgram(segmentContainer m, registerContainer r, unsigned B);
 
 //  Loads value into register A
 static inline void loadValue(registerContainer r, unsigned A, word value) {
-    r[A] = Bitpack_getu(value, 25, 0);
+    r[A] = ((value << (7)) >> 7);
 }
 
 // Frees segments inside segmentContainer
