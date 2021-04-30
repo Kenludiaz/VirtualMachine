@@ -114,6 +114,7 @@ word unMapSegment(segmentContainer m, registerContainer r, unsigned C) {
     if (removedItem == NULL || r[C] == 0) {
         exit(1);
     }
+    free((Segment)removedItem);
     return r[C];
 }
 
@@ -142,9 +143,8 @@ void loadProgram(segmentContainer m, registerContainer r, unsigned B) {
 // Frees segments from A[0], A[1], A[length]
 void freeSegments(segmentContainer m) {
     int length = Seq_length(m); 
-    int i = 0;
-    for ( ; i < length; i++) {
-        void * item = Seq_remlo(m);
+    for (int i = 0 ; i < length; i++) {
+        Segment item = (Segment)Seq_remlo(m);
         free(item);
     }
 }
