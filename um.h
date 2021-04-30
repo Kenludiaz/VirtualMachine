@@ -4,7 +4,6 @@
   
 */
 #include "memoryOperations.h"
-#include "table.h"
 #include "assert.h"
 
 // Runs a program until completion

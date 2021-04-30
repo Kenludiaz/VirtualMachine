@@ -1,0 +1,7 @@
+#!/bin/sh
+
+time -f "um advent.umz: %e seconds" um advent.umz < advent > /dev/null
+for i in midmark.um sandmark.umz
+do
+    time -f "um $i: %e seconds" um $i > /dev/null  
+done

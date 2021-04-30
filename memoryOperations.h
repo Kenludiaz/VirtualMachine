@@ -8,14 +8,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "atom.h"
-#include "bitpack.h"
 #include "seq.h"
 
 typedef uint32_t * registerContainer;
-typedef Table_T     segmentContainer;
-typedef Seq_T                Segment;
+typedef Seq_T       segmentContainer;
 typedef uint32_t                word;
+typedef word *               Segment;
 
 // Defined macro "max" in stdint was overflowing
 #define twopower32 4294967296
@@ -28,6 +26,18 @@ enum regs { r0 = 0, r1, r2, r3, r4, r5, r6, r7 };
 // writes it to a segment[0]
 Segment readInstructions(FILE * fp);
 
+// As long as lsb < word, will add value to word
+static inline word newWord(word currentWord, uint8_t lsb, int input) {
+    word mask = UINT32_MAX;
+    mask = ~(((mask << 24) >> 24) << lsb);
+    currentWord = currentWord & mask;
+
+    input = (input << lsb);
+    currentWord = currentWord | input;
+
+    return currentWord;
+}
+
 // Writes segment[segmentIndex] into fp
 void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
 
@@ -35,7 +45,10 @@ void writeSegment(segmentContainer segments, unsigned segmentIndex, FILE * fp);
 Segment getSegment(segmentContainer segments, unsigned index);
 
 // Returns the word at segment[offset]
-word getWord(Segment seg, unsigned offset);
+static inline word getWord(Segment seg, unsigned offset) {
+    return seg[offset];
+}
+
 
 // Reads the first four bytes of the instruction
 // and returns the appropriate opCode
@@ -43,13 +56,13 @@ int readOpCode(word instruction);
 
 // Returns the corresponding values to from an instruction
 static inline uint32_t CALC_A(word instruction) {
-    return Bitpack_getu(instruction, 3, 6);
+    return ((instruction << (23)) >> 29);
 }
 static inline uint32_t CALC_B(word instruction) {
-    return Bitpack_getu(instruction, 3, 3);
+    return ((instruction << (26)) >> 29);
 }
 static inline uint32_t CALC_C(word instruction) {
-    return Bitpack_getu(instruction, 3, 0);
+    return ((instruction << (29)) >> 29);
 }
 
 // Copies r[B] to r[A] if r[C] != 0
@@ -81,8 +94,7 @@ void Halt();
 // Will map to m[ r[B] ]
 void mapSegment(segmentContainer m, Seq_T unmappedIDs, registerContainer r,  unsigned B, unsigned C);
 
-// Adds items amount of elements ('0's) to seg 
-void padNewSegment(Segment seg, unsigned items);
+
 
 // Loops until ID is not mapped into m
 word findValidIdentifier(segmentContainer m);
@@ -105,8 +117,13 @@ void loadProgram(segmentContainer m, registerContainer r, unsigned B);
 
 //  Loads value into register A
 static inline void loadValue(registerContainer r, unsigned A, word value) {
-    r[A] = Bitpack_getu(value, 25, 0);
+    r[A] = ((value << (7)) >> 7);
 }
 
 // Frees segments inside segmentContainer
-void freeSegments(const void *key, void **value, void *cl);
+void freeSegments(segmentContainer m);
+
+#undef   registerContainer
+#undef    segmentContainer
+#undef             Segment
+#undef                word

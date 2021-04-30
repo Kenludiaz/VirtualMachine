@@ -1,45 +1,48 @@
 #include "memoryOperations.h"
-#include "bitpack.h"
-
+#include "array.h"
+#include "stdio.h"
 
 // Reads instructions from fp 
 // Fp will never be null
 Segment readInstructions(FILE * fp) {
-    // Hint was arbitrarily chosen
-    Segment seg = Seq_new(2);
+
+    // Code obtained from Tim Colaneri
+    // Goes to the beginning of the file
+    fseek(fp, 0, SEEK_END);
+    // Dividing by the 4 Bytes containted in an instruction
+    // gives us the total number of instructions
+    int instructions = ((ftell(fp)) / 4);
+    fseek(fp, 0, SEEK_SET);
+    Segment zero = calloc(instructions, sizeof(word));
 
     int input = 0;
+    int counter = 0;
     while ((input = getc(fp)) != EOF) {
         word currentWord = 0;
-
-        currentWord = Bitpack_newu(currentWord, 8, 24, input);
+        currentWord = newWord(currentWord, 24, input);
 		input = getc(fp);
-		currentWord = Bitpack_newu(currentWord, 8, 16, input);
+        currentWord = newWord(currentWord, 16, input);
 		input = getc(fp);
-		currentWord = Bitpack_newu(currentWord, 8, 8, input);
+        currentWord = newWord(currentWord, 8 , input);
 		input = getc(fp);
-		currentWord = Bitpack_newu(currentWord, 8, 0, input);
+        currentWord = newWord(currentWord, 0 , input);
         
-        Seq_addhi(seg, (void *)(uintptr_t)currentWord);
+        zero[counter++] = currentWord;
     }
-    return seg;
+    return zero;
 }
 // Accessing unmapped segments is a checked run-time error
 Segment getSegment(segmentContainer segments, unsigned index) {
-    void * segmentPointer = Table_get(segments, Atom_int(index));
+    void * segmentPointer = Seq_get(segments, index);
     if (segmentPointer == NULL) {
         exit(1);
     }
     return (Segment)segmentPointer;
 }
-// Accessing words out of bounds in a checked run-time error
-word getWord(Segment seg, unsigned offset) {
-    return ((uint32_t)(uintptr_t)Seq_get(seg, offset));
-}
 
 // Will return the first four bits of a word
 int readOpCode(word instruction) {
-    return (int)(instruction >> 28);
+    return (instruction >> 28);
 }
 // Every register will never exceed the value of the typedef of word
 int conditionalMove(threeRegisters) {
@@ -52,13 +55,12 @@ int conditionalMove(threeRegisters) {
 // Checked run-time error to load unmapped memory
 void segmentedLoad(segmentContainer m, threeRegisters) {
     Segment seg = getSegment( m, r[B] );
-    word Word = getWord( seg, r[C]);
-    r[A] = Word;
+    r[A] = getWord(seg, r[C]);
 }
 // Checked run-time error to store in unmapped memory
 void segmentStore(segmentContainer m, threeRegisters) {
     Segment seg = getSegment(m, r[A]);
-    Seq_put(seg, r[B], (void *)(uintptr_t)r[C]);
+    seg[ r[B] ] = r[C];
 }
 
 // r[A] will always be < 2^32
@@ -88,44 +90,26 @@ void Halt() {
 
 // r[B] will return a non-zero word
 void mapSegment(segmentContainer m, Seq_T unmappedIDs, registerContainer r,  unsigned B, unsigned C) {
-    word identifier;
-    Segment seg = Seq_new(0);
-    // Could not find a way to create a new sequence with an unsigned argument
-    // Using auxillary function to allocate empty sequences
-    padNewSegment(seg, r[C] );
+    unsigned identifier;
+    Segment seg = calloc(r[C], sizeof(word));
 
     if (Seq_length(unmappedIDs) == 0) {
-        identifier = findValidIdentifier(m);
+        identifier = Seq_length(m);
+        Seq_addhi(m, seg);
     } else {
         identifier = ((uint32_t)(uintptr_t)Seq_remlo(unmappedIDs));
+        Seq_put(m, identifier, seg);
     }
-    Table_put(m, Atom_int(identifier), seg);
     r[B] = identifier;
-}
-// Seg will have item-number of 0's
-void padNewSegment(Segment seg, unsigned items) {
-    for (unsigned i = 0; i < items; i++) {
-        Seq_addhi(seg, 0);
-    }
-}
-// 0 < identifier < 2^32
-word findValidIdentifier(segmentContainer m) {
-    word identifier = (uint32_t)Table_length(m);
-        while (Table_get(m, Atom_int(identifier)) != NULL) {
-            identifier++;
-            if (identifier == UINT32_MAX) {
-                identifier = 1;
-            }
-        }
-    return identifier;
 }
 
 // m[0] and unmapped memory will not be unmapped
 word unMapSegment(segmentContainer m, registerContainer r, unsigned C) {
-    void * removedItem = Table_remove(m, Atom_int(r[C]));
+    void * removedItem = Seq_put(m, r[C], 0);
     if (removedItem == NULL || r[C] == 0) {
         exit(1);
     }
+    free((Segment)removedItem);
     return r[C];
 }
 
@@ -148,15 +132,8 @@ void input(registerContainer r, unsigned C) {
 // Loading an unmapped segment is a checked run-time error
 void loadProgram(segmentContainer m, registerContainer r, unsigned B) {
     Segment program = getSegment(m, r[B]);
-    Table_put(m, Atom_int(0), program);
+    Seq_put(m, 0, program);
 }
 
-// Frees segments from A[0], A[1], A[length]
-void freeSegments(const void *key, void **value, void *cl) {
-        (void)key;
-        (void)cl;
-        Seq_T seq = *value;
-        Seq_free(&seq);
-}
 
 #undef twopower32
