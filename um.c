@@ -130,7 +130,7 @@ int run(FILE * program) {
             break;
         case LOADV:
  {
-        unsigned A = Bitpack_getu(instruction, 3, 25);
+        unsigned A = ((instruction << (4)) >> 29);
         loadValue(r, A, instruction);
  }           
             break;
@@ -139,7 +139,6 @@ int run(FILE * program) {
             break;
         }
     }
-    // freeSegments(m);
     Seq_free(&m);
     Seq_free(&unmappedIDs);
     return 0;
