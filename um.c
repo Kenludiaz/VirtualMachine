@@ -139,7 +139,7 @@ int run(FILE * program) {
             break;
         }
     }
-    freeSegments(m);
+    // freeSegments(m);
     Seq_free(&m);
     Seq_free(&unmappedIDs);
     return 0;

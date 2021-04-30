@@ -27,7 +27,6 @@ Segment readInstructions(FILE * fp) {
 		input = getc(fp);
         currentWord = newWord(currentWord, 0 , input);
         
-        // printf("Word: %u\n", currentWord);
         zero[counter++] = currentWord;
     }
     return zero;
@@ -43,7 +42,7 @@ Segment getSegment(segmentContainer segments, unsigned index) {
 
 // Will return the first four bits of a word
 int readOpCode(word instruction) {
-    return (int)(instruction >> 28);
+    return (instruction >> 28);
 }
 // Every register will never exceed the value of the typedef of word
 int conditionalMove(threeRegisters) {
@@ -136,22 +135,5 @@ void loadProgram(segmentContainer m, registerContainer r, unsigned B) {
     Seq_put(m, 0, program);
 }
 
-// Frees segments from A[0], A[1], A[length]
-void freeSegments(segmentContainer m) {
-    int length = Seq_length(m); 
-    for (int i = 0 ; i < length; i++) {
-        Segment item = (Segment)Seq_remlo(m);
-        free(item);
-    }
-}
-
-// Frees words from A[0], A[1], A[length]
-// void freeWords(Array_T array, int idx, void *elem, void *cl), void *cl) {
-//     (void)idx;
-//     (void)array;
-//     (void)cl;
-//     word Word = *value;
-//     free(&Word);
-// }
 
 #undef twopower32

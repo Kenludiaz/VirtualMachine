@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "bitpack.h"
 #include "seq.h"
 
 typedef uint32_t * registerContainer;
@@ -123,9 +122,6 @@ static inline void loadValue(registerContainer r, unsigned A, word value) {
 
 // Frees segments inside segmentContainer
 void freeSegments(segmentContainer m);
-
-// Frees words inside a segment
-// void freeWords(Array_T array, int idx, void *elem, void *cl), void *cl);
 
 #undef   registerContainer
 #undef    segmentContainer
